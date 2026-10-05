@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yevhen Domeretskyi, AI engineer</title>
+<meta name="description" content="I build voice and LLM agents for production: real-time voice, multi-agent systems, evals and LLM gateways.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E6E9E1; --paper-2:#DCE0D6; --ink:#16201B; --ink-2:#4E5A53; --rule:#B7BFB3;
+  --signal:#1F43D1; --amber:#C98A00; --dead:#9AA39C;
+  --measure:40rem;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --paper:#141A17; --paper-2:#1B2320; --ink:#E3E8E1; --ink-2:#9BA79F; --rule:#2E3833;
+    --signal:#7D97FF; --amber:#F0B429; --dead:#4B5650; }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:400 17px/1.55 "Schibsted Grotesk",system-ui,sans-serif}
+.readout b,.ticks,.limit span{font-variant-numeric:tabular-nums}
+a{color:var(--signal);text-underline-offset:3px}
+a:hover{text-decoration-thickness:2px}
+:focus-visible{outline:2px solid var(--signal);outline-offset:3px;border-radius:2px}
+.page{max-width:66rem;margin:0 auto;padding:0 24px}
+.measure{max-width:var(--measure)}
+
+/* masthead */
+.mast{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;padding:28px 0 0}
+.mast .who{font-weight:700;font-size:17px}
+.mast nav{display:flex;gap:20px;font-size:15px}
+.mast nav a{color:var(--ink-2);text-decoration:none}
+.mast nav a:hover{color:var(--ink)}
+
+/* hero */
+.hero{padding:72px 0 28px}
+h1{font-weight:800;font-size:clamp(38px,6.2vw,76px);line-height:.98;letter-spacing:-.035em;margin:0;max-width:14ch}
+.hero p{font-size:19px;color:var(--ink-2);margin:22px 0 0}
+
+/* trace */
+.trace{margin:40px 0 0;border-top:2px solid var(--ink);padding-top:18px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{font:inherit;font-size:15px;font-weight:600;cursor:pointer;color:var(--ink);background:transparent;
+  border:1.5px solid var(--ink);border-radius:999px;padding:8px 16px;line-height:1.2}
+button.go{background:var(--ink);color:var(--paper)}
+button[aria-pressed="true"]{background:var(--signal);border-color:var(--signal);color:#fff}
+button:disabled{opacity:.45;cursor:default}
+.readout{margin-left:auto;font-size:15px;color:var(--ink-2)}
+.readout b{font-size:28px;color:var(--ink);font-weight:800;letter-spacing:-.02em;margin-right:4px}
+
+.lanes{position:relative;margin-top:34px}
+.lane{display:grid;grid-template-columns:150px 1fr;align-items:center;min-height:34px}
+.lane .name{font-size:14px;color:var(--ink-2);padding-right:12px}
+.lane .name.group{color:var(--ink);font-weight:600}
+.track{position:relative;height:34px;border-bottom:1px solid var(--rule)}
+.bar{position:absolute;top:9px;height:16px;border-radius:3px;background:var(--ink);width:0}
+.bar.stt{background:var(--ink-2)}
+.bar.win{background:var(--amber)}
+.bar.lost{background:var(--dead)}
+.bar.dead{background:repeating-linear-gradient(90deg,var(--dead) 0 4px,transparent 4px 8px)}
+.bar.llm{background:var(--signal)}
+.bar.tool{background:transparent;border:1.5px solid var(--signal)}
+.bar.tts{background:var(--amber)}
+.bar.paused{background:repeating-linear-gradient(90deg,var(--amber) 0 3px,transparent 3px 6px)}
+.tag{position:absolute;top:-1px;font-size:12.5px;color:var(--ink-2);white-space:nowrap;transform:translateX(6px)}
+.tag.above{top:-6px;transform:none;background:var(--paper);padding:0 3px;line-height:1.2}
+.speech{position:absolute;top:13px;height:8px;border-radius:4px;background:var(--ink)}
+.axis{display:grid;grid-template-columns:150px 1fr}
+.ticks{position:relative;height:28px;font-size:12px;color:var(--ink-2)}
+.ticks span{position:absolute;top:6px;transform:translateX(-50%)}
+.cursor{position:absolute;top:0;bottom:28px;width:1.5px;background:var(--signal);left:150px;opacity:0;pointer-events:none}
+.limit{position:absolute;top:0;bottom:28px;width:0;border-left:1.5px dashed var(--ink-2);pointer-events:none}
+.limit span{position:absolute;top:-20px;left:6px;font-size:12px;color:var(--ink);font-weight:600;white-space:nowrap}
+.caption{font-size:14px;color:var(--ink-2);margin:14px 0 0}
+.log{min-height:1.55em;font-size:15px;margin:10px 0 0}
+
+/* sections */
+section{padding:84px 0 0}
+h2{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:0 0 10px}
+.lede{color:var(--ink-2);margin:0 0 28px}
+
+/* work list */
+.work{border-top:2px solid var(--ink)}
+details{border-bottom:1px solid var(--rule)}
+summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:6px 24px;align-items:baseline;padding:20px 0}
+summary::-webkit-details-marker{display:none}
+summary h3{margin:0;font-size:21px;font-weight:700;letter-spacing:-.01em}
+summary .result{grid-column:1;color:var(--ink-2);font-size:16px}
+summary .plus{grid-row:1/span 2;grid-column:2;font-size:26px;line-height:1;color:var(--signal);transition:transform .2s}
+details[open] summary .plus{transform:rotate(45deg)}
+.body{padding:0 0 28px;max-width:var(--measure)}
+.body p{margin:0 0 12px}
+.body ul{margin:0 0 12px;padding-left:20px}
+.body li{margin-bottom:6px}
+.stack{font-size:14.5px;color:var(--ink-2)}
+.where{font-size:14.5px;color:var(--ink-2);margin-bottom:10px}
+
+/* mini viz */
+.viz{margin:18px 0 14px;max-width:34rem}
+.viz .row{display:grid;grid-template-columns:96px 1fr;align-items:center;gap:10px;margin-bottom:8px;font-size:14px;color:var(--ink-2)}
+.meter{height:14px;background:var(--paper-2);border-radius:3px;position:relative;overflow:hidden}
+.meter i{position:absolute;inset:0 auto 0 0;background:var(--signal);transition:width .6s cubic-bezier(.2,.7,.2,1)}
+.meter.amber i{background:var(--amber)}
+.dots{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.day{display:flex;flex-wrap:wrap;gap:3px;align-content:flex-start;min-height:44px;padding:6px;background:var(--paper-2);border-radius:3px}
+.day i{width:8px;height:8px;border-radius:50%;background:var(--amber)}
+.day small{flex-basis:100%;font-size:11.5px;color:var(--ink-2)}
+.toggle{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden;margin-bottom:12px}
+.toggle button{border:0;border-radius:0;padding:6px 14px;font-size:14px}
+
+/* tools + experience */
+.tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 48px;max-width:56rem}
+.tools p{margin:0}
+.tools b{display:block}
+.tools span{color:var(--ink-2);font-size:15.5px}
+.exp{list-style:none;margin:0;padding:0;border-top:2px solid var(--ink);max-width:56rem}
+.exp li{display:grid;grid-template-columns:160px 1fr;gap:6px 24px;padding:16px 0;border-bottom:1px solid var(--rule)}
+.exp .when{color:var(--ink-2);font-size:15px}
+.exp b{font-weight:600}
+.exp span{display:block;color:var(--ink-2);font-size:15.5px}
+
+footer{padding:96px 0 72px}
+footer p.big{color:var(--ink);font-size:clamp(26px,3.6vw,40px);font-weight:800;letter-spacing:-.025em;line-height:1.1;margin:0 0 18px;max-width:22ch}
+footer p{color:var(--ink-2);margin:0 0 8px}
+.links{display:flex;flex-wrap:wrap;gap:22px;margin-top:18px;font-weight:600}
+
+@media (max-width:720px){
+  .lane,.axis{grid-template-columns:96px 1fr}
+  .cursor{left:96px}
+  .lane .name{font-size:12.5px}
+  .readout{margin-left:0;width:100%}
+  .tools{grid-template-columns:1fr}
+  .exp li{grid-template-columns:1fr}
+  .mast nav{gap:14px}
+  .hero{padding-top:48px}
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="mast">
+  <span class="who">Yevhen Domeretskyi</span>
+  <nav aria-label="Sections">
+    <a href="#work">Work</a><a href="#tools">Tools</a><a href="#contact">Contact</a>
+  </nav>
+</header>
+
+<main>
+<div class="hero">
+  <h1>Voice agents that answer before the pause gets awkward.</h1>
+  <p class="measure">I'm a senior AI engineer in Lviv, Ukraine. I build production LLM agents: real-time voice, multi-agent systems, and the evals and gateways that keep them reliable. Below is one turn of a voice call, run through the pipeline I designed.</p>
+
+  <div class="trace" aria-labelledby="trace-title">
+    <h2 id="trace-title" class="visually-hidden" style="position:absolute;left:-9999px">Simulated voice-agent turn</h2>
+    <div class="controls">
+      <button class="go" id="run">Run a turn</button>
+      <button id="outage" aria-pressed="false">Knock out a provider</button>
+      <button id="cough" aria-pressed="false">Cough while it talks</button>
+      <div class="readout" aria-live="polite"><b id="total">0</b>ms to first audio</div>
+    </div>
+
+    <div class="lanes" id="lanes">
+      <div class="lane"><div class="name group">Caller</div><div class="track" id="t-caller"></div></div>
+      <div class="lane"><div class="name">Deepgram</div><div class="track" id="t-s0"></div></div>
+      <div class="lane"><div class="name">Speechmatics</div><div class="track" id="t-s1"></div></div>
+      <div class="lane"><div class="name">Soniox</div><div class="track" id="t-s2"></div></div>
+      <div class="lane"><div class="name group">LLM</div><div class="track" id="t-llm"></div></div>
+      <div class="lane"><div class="name group">Agent voice</div><div class="track" id="t-tts"></div></div>
+      <div class="axis"><div></div><div class="ticks" id="ticks"></div></div>
+      <div class="limit" id="limit"><span>700 ms</span></div>
+      <div class="cursor" id="cursor"></div>
+    </div>
+    <p class="log" id="log" aria-live="polite">Press “Run a turn”. Speech-to-text providers race; the first transcript wins and the LLM starts on it.</p>
+    <p class="caption">A simulation of the design, with illustrative stage timings. In production the full turn stays under 700 ms at p95.</p>
+  </div>
+</div>
+
+<section id="work" aria-labelledby="work-h">
+  <h2 id="work-h">Work</h2>
+  <p class="lede measure">Client code is private, so these describe what I built and what changed. Open any of them.</p>
+
+  <div class="work">
+    <details open>
+      <summary><h3>Real-time voice agents</h3><span class="result">Under 700 ms per turn at p95</span><span class="plus" aria-hidden="true">+</span></summary>
+      <div class="body">
+        <p>Phone and website agents had to answer fast, cope with people talking over them, and keep working when a provider went down.</p>
+        <ul>
+          <li>Built the LiveKit pipeline with automatic fallback across 20+ LLMs and 20+ speech providers.</li>
+          <li>Replaced a timer-based speech-to-text setup with a parallel adapter that races providers and keeps the first result.</li>
+          <li>Made interruption handling configurable, including resuming after a false interruption. Wrote custom speech plugins.</li>
+        </ul>
+        <p class="stack">LiveKit, Twilio SIP, WebRTC, Kafka, Kubernetes on GKE and AKS, Python</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><h3>Evals that block bad releases</h3><span class="result">Production incidents fell from 3–4 a day to 3–4 a week</span><span class="plus" aria-hidden="true">+</span></summary>
+      <div class="body">
+        <p>Prompt and model changes kept breaking voice and chat agents after release. I made every release pass automated evals first.</p>
+        <div class="viz">
+          <div class="toggle" role="group" aria-label="Compare incident rate">
+            <button id="inc-before" aria-pressed="true">Before evals</button><button id="inc-after" aria-pressed="false">After evals</button>
+          </div>
+          <div class="dots" id="week" aria-label="Incidents over one week"></div>
+        </div>
+        <ul>
+          <li>Langfuse with LLM-as-judge on every release, over simulated conversations and red-team cases.</li>
+          <li>Live A/B tests of agent variants in outreach campaigns, picked by conversion rate.</li>
+        </ul>
+        <p class="stack">Langfuse, LLM-as-judge, OpenTelemetry</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><h3>One gateway for every LLM call</h3><span class="result">Six integrations replaced, 3–5 ms added per call</span><span class="plus" aria-hidden="true">+</span></summary>
+      <div class="body">
+        <p>Six services each talked to LLM providers their own way. I proposed one stateless gateway and built it: model routing, prompt caching and tool calls over gRPC, with zero-downtime deploys.</p>
+        <p>Sending simple steps to cheaper models, and to plain rules where no model was needed, was a large part of cutting cost per message and per call by 10 to 20 times.</p>
+        <p class="stack">Python, gRPC, Gemini explicit caching, Redis</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><h3>A form-filling assistant with a 64% smaller prompt</h3><span class="result">Form filling went from 30 minutes to 6</span><span class="plus" aria-hidden="true">+</span></summary>
+      <div class="body">
+        <p>A router sends each message to one of several specialised agents. The form-filling agent was carrying more than 50,000 tokens a request across 80+ branching questions.</p>
+        <div class="viz">
+          <div class="toggle" role="group" aria-label="Compare prompt size">
+            <button id="ctx-before" aria-pressed="false">Before</button><button id="ctx-after" aria-pressed="true">After</button>
+          </div>
+          <div class="row"><span id="ctx-label">18K tokens</span><div class="meter"><i id="ctx-bar" style="width:36%"></i></div></div>
+        </div>
+        <ul>
+          <li>Moved form state out of the prompt into its own service. The model writes answers through one function call: a JSON path and a value.</li>
+          <li>Pruned the prompt every turn and replaced LangChain with direct OpenAI calls.</li>
+          <li>Built a search agent that samples the data, then writes, runs and fixes its own SQL.</li>
+        </ul>
+        <p class="stack">Azure OpenAI, Django, function calling, structured outputs</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><h3>Agents on top of an undocumented enterprise API</h3><span class="result">An MCP server with 30 tools over hundreds of endpoints</span><span class="plus" aria-hidden="true">+</span></summary>
+      <div class="body">
+        <p>The API had hundreds of undocumented endpoints. I mapped them into 30 tools agents can use safely, and built scheduled AI briefings on top.</p>
+        <p>I also built a Graph-RAG memory service in Neo4j with chunking and reranking, and wrote testing and observability templates that three other teams adopted.</p>
+        <p class="stack">Python MCP SDK, FastMCP, Azure AI Foundry, Neo4j, Langfuse</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><h3>Multi-channel AI outreach, built from scratch</h3><span class="result">From idea to first customers in two months</span><span class="plus" aria-hidden="true">+</span></summary>
+      <div class="body">
+        <p>I was the first developer and built most of the product: voice, SMS, WhatsApp and email campaigns run as Temporal workflows. A rules-based dialer, regex voicemail detection and a cached opening greeting took the LLM out of steps that didn't need it.</p>
+        <p class="stack">FastAPI, Temporal, Celery, PostgreSQL, Twilio, GCP</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<section id="tools" aria-labelledby="tools-h">
+  <h2 id="tools-h">Tools</h2>
+  <p class="lede measure">What I've used in production, not just tried.</p>
+  <div class="tools">
+    <p><b>Agents</b><span>Function calling, multi-agent routing, MCP, structured outputs, guardrails, context engineering, LangGraph. OpenAI, Anthropic, Gemini, Azure OpenAI.</span></p>
+    <p><b>Evals and observability</b><span>Langfuse, LLM-as-judge, red-team cases, live A/B tests, prompt versioning, OpenTelemetry, Prometheus, Grafana.</span></p>
+    <p><b>Voice</b><span>LiveKit, Twilio SIP, WebRTC, Deepgram, Speechmatics, ElevenLabs, Whisper, turn detection.</span></p>
+    <p><b>Retrieval</b><span>Hybrid search in Milvus, Graph-RAG in Neo4j, chunking and reranking, text-to-SQL.</span></p>
+    <p><b>Backend</b><span>Python, FastAPI, Django, Temporal, Celery, gRPC, asyncio, Kafka, PostgreSQL, Redis.</span></p>
+    <p><b>Infrastructure</b><span>Kubernetes on GKE and AKS, Docker, GCP, AWS, Azure, Terraform.</span></p>
+  </div>
+</section>
+
+</main>
+
+<footer id="contact">
+  <p class="big">Hiring for senior or staff AI work? I'd like to hear about it.</p>
+  <p class="measure">I work fully remote from Lviv, Ukraine (UTC+2 in winter, UTC+3 in summer) and contract through my own registered business. BSc in IT and Business Analysis, Ukrainian Catholic University. English B2+.</p>
+  <div class="links">
+    <a href="mailto:yevhen.domeretskyi@gmail.com">yevhen.domeretskyi@gmail.com</a>
+    <a href="https://www.linkedin.com/in/yevhen-domeretskyi">LinkedIn</a>
+    <a href="https://github.com/Paliy2">GitHub</a>
+  </div>
+</footer>
+</div>
+
+<script>
+(() => {
+  const SCALE = 900;                       // ms shown on the axis
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = id => document.getElementById(id);
+  const pct = ms => (ms / SCALE * 100) + '%';
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const tracks = ['t-caller','t-s0','t-s1','t-s2','t-llm','t-tts'].map($);
+  const names = ['Deepgram','Speechmatics','Soniox'];
+
+  // axis + limit line
+  const ticks = $('ticks');
+  for (let t = 0; t <= SCALE; t += 100) {
+    const s = document.createElement('span'); s.style.left = pct(t); s.textContent = t; ticks.appendChild(s);
+  }
+  function placeLimit(){
+    const track = tracks[0].getBoundingClientRect(), lanes = $('lanes').getBoundingClientRect();
+    $('limit').style.left = (track.left - lanes.left + track.width * 700 / SCALE) + 'px';
+    cursorOrigin = track.left - lanes.left; cursorWidth = track.width;
+  }
+  let cursorOrigin = 150, cursorWidth = 1;
+  addEventListener('resize', placeLimit); placeLimit();
+
+  const outageBtn = $('outage'), coughBtn = $('cough'), runBtn = $('run');
+  [outageBtn, coughBtn].forEach(b => b.addEventListener('click', () => {
+    b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+  }));
+
+  function bar(track, cls, start, end, label, anchor){
+    const el = document.createElement('div');
+    el.className = 'bar ' + cls; el.style.left = pct(start);
+    el.dataset.start = start; el.dataset.end = end;
+    track.appendChild(el);
+    if (label) {
+      const t = document.createElement('span'); t.className = 'tag'; t.textContent = label; t.hidden = true;
+      const at = anchor === 'start' ? start : end;
+      t.style.left = pct(at); t.dataset.at = at;
+      if (anchor === 'start') t.classList.add('above');
+      track.appendChild(t);
+    }
+    return el;
+  }
+
+  function plan(){
+    const outage = outageBtn.getAttribute('aria-pressed') === 'true';
+    const cough = coughBtn.getAttribute('aria-pressed') === 'true';
+    const stt = names.map(() => Math.round(rand(170, 300)));
+    let fastest = stt.indexOf(Math.min(...stt));
+    const deadIdx = outage ? fastest : -1;
+    if (outage) { const alive = stt.map((v,i)=>i===deadIdx?Infinity:v); fastest = alive.indexOf(Math.min(...alive)); }
+    const sttDone = stt[fastest];
+    const tool = Math.round(rand(60, 90));
+    const llmFirst = sttDone + Math.round(rand(150, 190)) + tool;
+    const ttsFirst = llmFirst + Math.round(rand(80, 110));
+    return { stt, fastest, deadIdx, sttDone, tool, llmFirst, ttsFirst, cough };
+  }
+
+  let raf = 0;
+  function run(){
+    cancelAnimationFrame(raf);
+    tracks.forEach(t => t.innerHTML = '');
+    const p = plan();
+    // caller speech ends at 0 → show the tail of the utterance before 0 is not on axis; draw a short "speech" stub
+    const speech = document.createElement('div'); speech.className='speech'; speech.style.left='0'; speech.style.width=pct(28); tracks[0].appendChild(speech);
+    const sttBars = p.stt.map((d,i) => {
+      if (i === p.deadIdx) return bar(tracks[i+1], 'dead', 0, 560, 'no response, ignored');
+      return bar(tracks[i+1], 'stt', 0, d, i === p.fastest ? 'first transcript' : 'too late, dropped');
+    });
+    const llmStart = p.sttDone;
+    bar(tracks[4], 'llm', llmStart, llmStart + (p.llmFirst - p.tool - llmStart));
+    bar(tracks[4], 'tool', p.llmFirst - p.tool, p.llmFirst, 'tool call, then first token');
+    const speakEnd = SCALE * 0.98;
+    let coughAt = 0, resumeAt = 0;
+    if (p.cough) {
+      coughAt = p.ttsFirst + 70; resumeAt = coughAt + 90;
+      bar(tracks[5], 'tts', p.ttsFirst, coughAt, 'first audio', 'start');
+      bar(tracks[5], 'paused', coughAt, resumeAt);
+      bar(tracks[5], 'tts', resumeAt, speakEnd, 'resumes', 'start');
+      const c = document.createElement('div'); c.className='speech'; c.style.left=pct(coughAt); c.style.width=pct(24); c.style.opacity=0; c.dataset.at = coughAt; tracks[0].appendChild(c);
+    } else {
+      bar(tracks[5], 'tts', p.ttsFirst, speakEnd, 'first audio', 'start');
+    }
+
+    const all = [...document.querySelectorAll('#lanes .bar')];
+    const tags = [...document.querySelectorAll('#lanes .tag')];
+    const cough = tracks[0].querySelector('.speech[data-at]');
+    const totalEl = $('total'), log = $('log'), cursor = $('cursor');
+    runBtn.disabled = true;
+
+    const finish = () => {
+      all.forEach(b => b.style.width = pct(b.dataset.end - b.dataset.start));
+      tags.forEach(t => t.hidden = false);
+      if (cough) cough.style.opacity = 1;
+      p.stt.forEach((d,i) => { if (i !== p.fastest && i !== p.deadIdx) sttBars[i].classList.add('lost'); });
+      sttBars[p.fastest].classList.add('win');
+      totalEl.textContent = p.ttsFirst;
+      cursor.style.opacity = 0;
+      runBtn.disabled = false; runBtn.textContent = 'Run another turn';
+      const parts = [`${names[p.fastest]} answered first at ${p.sttDone} ms.`];
+      if (p.deadIdx >= 0) parts.push(`${names[p.deadIdx]} never answered, and the call didn't wait for it.`);
+      parts.push(`First audio at ${p.ttsFirst} ms.`);
+      if (p.cough) parts.push('The cough paused the agent; it was a false interruption, so the agent picked up where it stopped.');
+      log.textContent = parts.join(' ');
+    };
+
+    if (reduce) { finish(); return; }
+
+    const DURATION = 2600;  // real ms to play SCALE simulated ms
+    const t0 = performance.now();
+    log.textContent = 'You stop talking. Three speech-to-text providers start on the same audio…';
+    cursor.style.opacity = 1;
+    const step = now => {
+      const sim = Math.min(SCALE, (now - t0) / DURATION * SCALE);
+      cursor.style.left = (cursorOrigin + cursorWidth * sim / SCALE) + 'px';
+      all.forEach(b => {
+        const s = +b.dataset.start, e = +b.dataset.end;
+        if (sim > s) b.style.width = pct(Math.min(sim, e) - s);
+      });
+      tags.forEach(t => { if (sim >= +t.dataset.at) t.hidden = false; });
+      if (sim >= p.sttDone && !sttBars[p.fastest].classList.contains('win')) {
+        sttBars[p.fastest].classList.add('win');
+        p.stt.forEach((d,i) => { if (i !== p.fastest && i !== p.deadIdx) sttBars[i].classList.add('lost'); });
+        log.textContent = `${names[p.fastest]} answered first. The LLM starts on that transcript; the others are dropped.`;
+      }
+      totalEl.textContent = Math.round(Math.min(sim, p.ttsFirst));
+      if (cough && sim >= coughAt && cough.style.opacity === '0') { cough.style.opacity = 1; log.textContent = 'The caller coughs. The agent pauses to listen…'; }
+      if (sim < SCALE) raf = requestAnimationFrame(step); else finish();
+    };
+    raf = requestAnimationFrame(step);
+  }
+  runBtn.addEventListener('click', run);
+
+  // incidents: 7 days, before ≈ 3–4/day, after ≈ 3–4/week
+  const week = $('week'), days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const before = [4,3,4,3,4,3,3], after = [1,0,1,0,1,0,0];
+  function drawWeek(data){
+    week.innerHTML = '';
+    data.forEach((n,i) => {
+      const d = document.createElement('div'); d.className = 'day';
+      d.innerHTML = `<small>${days[i]}</small>` + '<i></i>'.repeat(n);
+      d.setAttribute('aria-label', `${days[i]}: ${n} incident${n===1?'':'s'}`);
+      week.appendChild(d);
+    });
+  }
+  function pair(aId, bId, onA, onB){
+    const a = $(aId), b = $(bId);
+    a.addEventListener('click', () => { a.setAttribute('aria-pressed','true'); b.setAttribute('aria-pressed','false'); onA(); });
+    b.addEventListener('click', () => { b.setAttribute('aria-pressed','true'); a.setAttribute('aria-pressed','false'); onB(); });
+  }
+  drawWeek(before);
+  pair('inc-before','inc-after', () => drawWeek(before), () => drawWeek(after));
+
+  // context size: 50K+ → 18K
+  const ctxBar = $('ctx-bar'), ctxLabel = $('ctx-label');
+  pair('ctx-before','ctx-after',
+    () => { ctxBar.style.width = '100%'; ctxLabel.textContent = '50K+ tokens'; },
+    () => { ctxBar.style.width = '36%'; ctxLabel.textContent = '18K tokens'; });
+})();
+</script>
+</body>
+</html>
