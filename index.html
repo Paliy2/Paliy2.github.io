@@ -112,7 +112,40 @@ details[open] summary .plus{transform:rotate(45deg)}
 .toggle{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden;margin-bottom:12px}
 .toggle button{border:0;border-radius:0;padding:6px 14px;font-size:14px}
 
-/* tools + experience */
+/* hours */
+.hours-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:12px 32px;margin-bottom:22px}
+.hours-head h2{margin:0;font-size:clamp(30px,4.4vw,52px);line-height:1;letter-spacing:-.03em;max-width:16ch}
+.yours{font-size:17px;max-width:30rem;color:var(--ink-2);margin:0}
+.yours b{color:var(--ink)}
+.zones{position:relative;margin-top:34px;border-top:2px solid var(--ink);user-select:none;touch-action:pan-y}
+.zone{display:grid;grid-template-columns:170px 1fr 92px;align-items:center;min-height:44px;border-bottom:1px solid var(--rule)}
+.zone .city{font-size:15px}
+.zone .city small{display:block;font-size:12.5px;color:var(--ink-2)}
+.zone.you .city{font-weight:700}
+.zone .ov{text-align:right;font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.zone .ov small{display:block;font-weight:400;font-size:12px;color:var(--ink-2)}
+.strip{position:relative;height:44px}
+.work-band{position:absolute;top:13px;height:18px;border-radius:3px;background:var(--paper-2);outline:1.5px solid var(--rule);outline-offset:-1.5px}
+.hit{position:absolute;top:13px;height:18px;border-radius:3px;background:var(--amber)}
+.avail{position:absolute;top:0;bottom:30px;background:color-mix(in srgb,var(--signal) 13%,transparent);border-left:2px solid var(--signal);border-right:2px solid var(--signal);pointer-events:none}
+.avail span{position:absolute;top:-24px;left:-2px;font-size:13px;font-weight:700;color:var(--signal);white-space:nowrap}
+.hour-axis{display:grid;grid-template-columns:170px 1fr 92px}
+.hour-axis .ticks{height:30px}
+.scrub{position:absolute;top:0;bottom:30px;width:1.5px;background:var(--ink);pointer-events:none;opacity:0}
+.scrub-read{position:absolute;top:-24px;transform:translateX(-50%);font-size:13px;font-weight:700;white-space:nowrap;background:var(--paper);padding:0 4px}
+.zone .now{color:var(--ink-2);font-size:12.5px}
+.hours-note{font-size:14px;color:var(--ink-2);margin:14px 0 0}
+.badge{display:inline-flex;gap:10px;align-items:center;margin-top:24px;padding:10px 16px 10px 12px;border-radius:999px;background:var(--ink);color:var(--paper);font-size:15px;font-weight:600;text-decoration:none}
+.badge:hover{text-decoration:none;filter:brightness(1.15)}
+.badge i{width:10px;height:10px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 0 var(--amber);animation:ping 2.4s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--amber) 70%,transparent)}70%{box-shadow:0 0 0 10px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@media (max-width:720px){
+  .zone,.hour-axis{grid-template-columns:92px 1fr 64px}
+  .zone .city{font-size:13.5px}
+  .hour-axis .ticks{font-size:11px}
+}
+@media (prefers-reduced-motion: reduce){ .badge i{animation:none} }
+/* tools */
 .tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 48px;max-width:56rem}
 .tools p{margin:0}
 .tools b{display:block}
@@ -147,7 +180,7 @@ footer p{color:var(--ink-2);margin:0 0 8px}
 <header class="mast">
   <span class="who">Yevhen Domeretskyi</span>
   <nav aria-label="Sections">
-    <a href="#work">Work</a><a href="#tools">Tools</a><a href="#contact">Contact</a>
+    <a href="#work">Work</a><a href="#hours">Hours</a><a href="#tools">Tools</a><a href="#contact">Contact</a>
   </nav>
 </header>
 
@@ -155,6 +188,7 @@ footer p{color:var(--ink-2);margin:0 0 8px}
 <div class="hero">
   <h1>Voice agents that answer before the pause gets awkward.</h1>
   <p class="measure">I'm a senior AI engineer in Lviv, Ukraine. I build production LLM agents: real-time voice, multi-agent systems, and the evals and gateways that keep them reliable. Below is one turn of a voice call, run through the pipeline I designed.</p>
+  <a class="badge" href="#hours"><i aria-hidden="true"></i><span id="badge-text">Works across US and EU hours</span></a>
 
   <div class="trace" aria-labelledby="trace-title">
     <h2 id="trace-title" class="visually-hidden" style="position:absolute;left:-9999px">Simulated voice-agent turn</h2>
@@ -180,6 +214,18 @@ footer p{color:var(--ink-2);margin:0 0 8px}
     <p class="caption">A simulation of the design, with illustrative stage timings. In production the full turn stays under 700 ms at p95.</p>
   </div>
 </div>
+
+<section id="hours" aria-labelledby="hours-h">
+  <div class="hours-head">
+    <h2 id="hours-h">Your working day, covered.</h2>
+    <p class="yours" id="yours" aria-live="polite">I keep long hours that overlap with Europe and the US. Hover or tap the strip to see what time it is everywhere.</p>
+  </div>
+  <div class="zones" id="zones">
+        <div class="scrub" id="scrub"><span class="scrub-read" id="scrub-read"></span></div>
+  </div>
+  <div class="hour-axis"><div></div><div class="ticks" id="hour-ticks"></div><div></div></div>
+  <p class="hours-note">Grey bars are a 9 to 5 working day in each city, amber is the part I cover. Hours shown in your local time. Standups, pairing and on-call can shift to fit the team.</p>
+</section>
 
 <section id="work" aria-labelledby="work-h">
   <h2 id="work-h">Work</h2>
@@ -281,7 +327,7 @@ footer p{color:var(--ink-2);margin:0 0 8px}
 
 <footer id="contact">
   <p class="big">Hiring for senior or staff AI work? I'd like to hear about it.</p>
-  <p class="measure">I work fully remote from Lviv, Ukraine (UTC+2 in winter, UTC+3 in summer) and contract through my own registered business. BSc in IT and Business Analysis, Ukrainian Catholic University. English B2+.</p>
+  <p class="measure">I work fully remote from Lviv, Ukraine, online 10:00 to 23:00 Kyiv time: the whole European day and most of the US Eastern one. Flexible when the team needs it. I contract through my own registered business. BSc in IT and Business Analysis, Ukrainian Catholic University. English B2+.</p>
   <div class="links">
     <a href="mailto:yevhen.domeretskyi@gmail.com">yevhen.domeretskyi@gmail.com</a>
     <a href="https://www.linkedin.com/in/yevhen-domeretskyi">LinkedIn</a>
@@ -447,6 +493,108 @@ footer p{color:var(--ink-2);margin:0 0 8px}
   pair('ctx-before','ctx-after',
     () => { ctxBar.style.width = '100%'; ctxLabel.textContent = '50K+ tokens'; },
     () => { ctxBar.style.width = '36%'; ctxLabel.textContent = '18K tokens'; });
+})();
+
+// ---- working hours overlap ----
+(() => {
+  const MY_TZ = 'Europe/Kyiv', MY_START = 10, MY_END = 23;   // availability in Kyiv/Lviv time
+  const DAY_START = 9, DAY_END = 17;
+  const viewerTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  const cities = [
+    ['San Francisco','America/Los_Angeles'], ['New York','America/New_York'],
+    ['London','Europe/London'], ['Berlin','Europe/Berlin'], ['Lviv (me)', MY_TZ]
+  ];
+  const offset = tz => {  // minutes east of UTC, DST-aware for today
+    const d = new Date(); d.setSeconds(0,0);
+    const loc = new Date(d.toLocaleString('en-US',{timeZone:tz}));
+    const utc = new Date(d.toLocaleString('en-US',{timeZone:'UTC'}));
+    return Math.round((loc - utc) / 60000);
+  };
+  const vOff = offset(viewerTz);
+  const toViewer = (h, tz) => (((h * 60 - offset(tz) + vOff) / 60) % 24 + 24) % 24;   // tz local hour -> viewer hour
+  const segs = (a, b) => b > a ? [[a,b]] : [[a,24],[0,b]];                            // wrap-aware ranges
+  const range = (h, tz, len) => { const s = toViewer(h, tz); return segs(s, (s + len) % 24 || 24); };
+  const inter = (A, B) => { const out=[]; A.forEach(([a1,a2]) => B.forEach(([b1,b2]) => { const s=Math.max(a1,b1), e=Math.min(a2,b2); if (e>s) out.push([s,e]); })); return out; };
+  const pct = h => (h / 24 * 100) + '%';
+  const mine = range(MY_START, MY_TZ, MY_END - MY_START);
+
+  const isMine = offset(MY_TZ) === vOff;
+  const known = isMine || cities.some(([,tz]) => offset(tz) === vOff);
+  const rows = known ? cities : [['You', viewerTz], ...cities];
+  const zones = document.getElementById('zones');
+  const fmt = (tz, d) => d.toLocaleTimeString('en-GB',{timeZone:tz,hour:'2-digit',minute:'2-digit'});
+  let youOverlap = null, youName = 'your';
+
+  rows.forEach(([name, tz]) => {
+    const isYou = !isMine && offset(tz) === vOff;
+    const day = range(DAY_START, tz, DAY_END - DAY_START);
+    const hit = inter(day, mine);
+    const hours = hit.reduce((s,[a,b]) => s + b - a, 0);
+    if (isYou && youOverlap === null) { youOverlap = hours; youName = name === 'You' ? 'your' : name; }
+    const row = document.createElement('div'); row.className = 'zone' + (isYou ? ' you' : '');
+    row.innerHTML = `<div class="city">${name}${isYou && name !== 'You' ? ' (you)' : ''}<small class="now" data-tz="${tz}"></small></div><div class="strip"></div><div class="ov">${name.startsWith('Lviv') ? '' : (Math.round(hours) + ' h')}<small>${name.startsWith('Lviv') ? '' : 'overlap'}</small></div>`;
+    const strip = row.querySelector('.strip');
+    day.forEach(([a,b]) => { const el=document.createElement('div'); el.className='work-band'; el.style.left=pct(a); el.style.width=pct(b-a); strip.appendChild(el); });
+    if (!name.startsWith('Lviv')) hit.forEach(([a,b]) => { const el=document.createElement('div'); el.className='hit'; el.style.left=pct(a); el.style.width=pct(b-a); strip.appendChild(el); });
+    zones.appendChild(row);
+  });
+
+  // availability column, positioned over the strip area
+  const avails = mine.map(([a,b], i) => {
+    const el = document.createElement('div'); el.className = 'avail';
+    if (i === 0) el.innerHTML = '<span>I\u2019m online</span>';
+    zones.appendChild(el); return [el, a, b];
+  });
+  const place = () => {
+    const strip = zones.querySelector('.strip'); if (!strip) return;
+    const zr = zones.getBoundingClientRect(), sr = strip.getBoundingClientRect();
+    avails.forEach(([el,a,b]) => {
+      el.style.left = (sr.left - zr.left + sr.width * a / 24) + 'px';
+      el.style.width = (sr.width * (b - a) / 24) + 'px';
+      el.style.bottom = '0';
+    });
+    stripBox = { left: sr.left - zr.left, width: sr.width };
+  };
+  let stripBox = { left: 0, width: 1 };
+  addEventListener('resize', place); place();
+
+  const ticks = document.getElementById('hour-ticks');
+  for (let h = 0; h <= 24; h += (innerWidth < 720 ? 6 : 3)) { const s=document.createElement('span'); s.style.left=pct(h); s.textContent = String(h % 24).padStart(2,'0') + ':00'; ticks.appendChild(s); }
+
+  const tick = () => document.querySelectorAll('.now').forEach(n => n.textContent = 'now ' + fmt(n.dataset.tz, new Date()));
+  tick(); setInterval(tick, 30000);
+
+  // headline + badge for this visitor
+  const yours = document.getElementById('yours'), badge = document.getElementById('badge-text');
+  const ny = inter(range(DAY_START,'America/New_York',8), mine).reduce((s,[a,b])=>s+b-a,0);
+  const lon = inter(range(DAY_START,'Europe/London',8), mine).reduce((s,[a,b])=>s+b-a,0);
+  const sf = inter(range(DAY_START,'America/Los_Angeles',8), mine).reduce((s,[a,b])=>s+b-a,0);
+  if (youOverlap === null) {
+    yours.innerHTML = `<b>The whole European working day, ${Math.round(ny)} hours of New York's and ${Math.round(sf)} of San Francisco's.</b> Hover or tap the strip to see the time in each city.`;
+    badge.textContent = `Full EU day + ${Math.round(ny)} h of US Eastern`;
+  } else if (Math.round(youOverlap) >= 8) {
+    yours.innerHTML = `<b>I'm online for all of ${youName === 'your' ? 'your' : youName + '\u2019s'} working day.</b> Europe gets a full overlap, US Eastern gets ${Math.round(ny)} hours.`;
+    badge.textContent = 'Online for your whole working day';
+  } else if (youOverlap !== null && youOverlap > 0) {
+    yours.innerHTML = `<b>${Math.round(youOverlap)} hours of ${youName === 'your' ? 'your' : youName + '\u2019s'} working day overlap with mine</b>, and I can shift for standups and launches.`;
+    badge.textContent = `${Math.round(youOverlap)} h overlap with your working day`;
+  }
+
+  // scrub: time in every city at the pointer
+  const scrub = document.getElementById('scrub'), read = document.getElementById('scrub-read');
+  const move = x => {
+    const rel = Math.min(Math.max((x - stripBox.left) / stripBox.width, 0), 0.9999);
+    const vh = rel * 24;
+    const now = new Date();
+    const vNowH = (now.getUTCHours()*60 + now.getUTCMinutes() + vOff) / 60;
+    const at = new Date(now.getTime() + (vh - vNowH) * 3600000);
+    scrub.style.left = (stripBox.left + rel * stripBox.width) + 'px'; scrub.style.opacity = 1;
+    read.textContent = fmt(viewerTz, at) + ' your time';
+    document.querySelectorAll('.now').forEach(n => n.textContent = fmt(n.dataset.tz, at));
+  };
+  zones.addEventListener('pointermove', e => move(e.clientX - zones.getBoundingClientRect().left));
+  zones.addEventListener('pointerdown', e => move(e.clientX - zones.getBoundingClientRect().left));
+  zones.addEventListener('pointerleave', () => { scrub.style.opacity = 0; tick(); });
 })();
 </script>
 </body>
